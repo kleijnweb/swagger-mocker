@@ -1,6 +1,6 @@
 <?php
 
-namespace Zwartpet\SwaggerMockerBundle\Tests\Routing;
+namespace Zwartpet\SwaggerMockerBundle\Tests\Service;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;

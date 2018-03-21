@@ -3,37 +3,44 @@
 namespace Zwartpet\SwaggerMockerBundle\Controller;
 
 use KleijnWeb\SwaggerBundle\Document\OperationObject;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Zwartpet\SwaggerMockerBundle\Model\StubRequest;
-use Zwartpet\SwaggerMockerBundle\Model\StubResponse;
 use Zwartpet\SwaggerMockerBundle\Service\StubMatcher;
 
 class DefaultController extends Controller
 {
     /**
-     * @var string
+     * @var string|null
      */
     private $examplesDir;
 
     /**
      * @var StubMatcher
      */
-    private $stubLoader;
+    private $stubMatcher;
 
     /**
-     * @param $rootDir
+     * @param string               $rootDir
+     * @param LoggerInterface|null $logger
      */
-    public function __construct($rootDir)
+    public function __construct(string $rootDir, LoggerInterface $logger = null, StubMatcher $stubMatcher = null)
     {
-        $this->examplesDir = $rootDir . '/../web/swagger/examples/';
+        $this->examplesDir = realpath($rootDir . '/../web/swagger/examples/') ?: null;
 
-        $this->stubLoader = new StubMatcher(
-            new Filesystem(),
-            "$rootDir/web/swagger/stubs"
-        );
+        if (null === $logger) {
+            /** @var LoggerInterface $logger */
+            $logger = $this->get('logger');
+        }
+
+        if (null !== $stubMatcher) {
+            $this->stubMatcher = $stubMatcher;
+        } else {
+            $this->stubMatcher = new StubMatcher(new Filesystem(), "$rootDir/../web/swagger/stubs.yml", $logger);
+        }
     }
 
     /**
@@ -43,11 +50,11 @@ class DefaultController extends Controller
      */
     public function getResponse(Request $request)
     {
-        if ($stubResponse = $this->stubLoader->getStubResponse(StubRequest::fromHttpFoundation($request))) {
+        if (null !== $stubResponse = $this->stubMatcher->getStubResponse(StubRequest::fromHttpFoundation($request))) {
             return $stubResponse->toHttpFoundation();
         }
 
-        if ($fileExamples = $this->getExamplesFromFile($request)) {
+        if (null !== $fileExamples = $this->getExamplesFromFile($request)) {
             return $fileExamples;
         }
 
@@ -71,7 +78,7 @@ class DefaultController extends Controller
 
     /**
      * @param Request $request
-     * @return bool|string
+     * @return null|\stdClass
      */
     private function getExamplesFromFile(Request $request)
     {
@@ -90,11 +97,17 @@ class DefaultController extends Controller
             $this->getQueryString($attributes) .
             $this->getQueryString($request->query->all());
 
-        if ($fs->exists($this->examplesDir . $examplesPath . '.json')) {
-            return json_decode(file_get_contents($this->examplesDir . $examplesPath . '.json'));
+        $pathBaseName = "{$this->examplesDir}/{$examplesPath}";
+
+        if ($fs->exists($pathName = "$pathBaseName.json")) {
+            return $this->stubMatcher->loadDefinition($pathName);
         }
 
-        return false;
+        if ($fs->exists($pathName = "$pathBaseName.yaml")) {
+            return $this->stubMatcher->parseDefinition($pathName);
+        }
+
+        return null;
     }
 
     /**

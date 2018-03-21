@@ -50,7 +50,9 @@ class Url
     public function __construct(string $uri = null)
     {
         if (null !== $uri) {
-            $segments = parse_url($uri);
+            if(false === $segments = parse_url($uri)){
+                throw new \InvalidArgumentException("Failed to parse '$uri' as URL");
+            }
 
             foreach ($segments as $property => $value) {
                 $this->$property = $value;

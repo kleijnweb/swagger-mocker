@@ -62,10 +62,16 @@ class StubResponse extends StubMessage
     {
         $body = is_string($this->getBody()) ? $this->getBody() : json_encode($this->getBody());
 
-        if (!json_last_error() === JSON_ERROR_NONE) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \UnexpectedValueException("JSON encoding error");
         }
 
+        if (!$this->getHeaders()) {
+            $this->setHeaders((object)[]);
+        }
+        if (!isset($this->getHeaders()->{'Content-Type'})) {
+            $this->getHeaders()->{'Content-Type'} = 'application/json';
+        }
         return new Response(
             $body,
             $this->getStatus(),

@@ -86,18 +86,24 @@ class StubMatcher
     public function parseDefinition(string $filePath)
     {
         if (preg_match('/\.(yml|yaml)$/', $filePath)) {
-            return Yaml::parse(file_get_contents($filePath), Yaml::PARSE_OBJECT | Yaml::PARSE_OBJECT_FOR_MAP);
+            $result = Yaml::parse(file_get_contents($filePath), Yaml::PARSE_OBJECT | Yaml::PARSE_OBJECT_FOR_MAP);
         } elseif (preg_match('/\.json$/', $filePath)) {
             $responseDefinition = json_decode(file_get_contents($filePath));
 
-            if (!json_last_error() === JSON_ERROR_NONE) {
+            if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \RuntimeException("Failed decoding $filePath");
             }
-            return $responseDefinition;
+            $result = $responseDefinition;
         } else {
             throw new \InvalidArgumentException(
                 "File path must be either JSOn or YAML (end in *.json, *.yaml or *.yml, got '$filePath')"
             );
         }
+
+        if (!is_array($result) && !$result instanceof \stdClass) {
+            throw  new \UnexpectedValueException("Parse result must be an array ");
+        }
+
+        return $result;
     }
 }

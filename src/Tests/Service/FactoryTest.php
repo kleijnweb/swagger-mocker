@@ -1,8 +1,9 @@
 <?php
 
-namespace Zwartpet\SwaggerMockerBundle\Tests\Routing;
+namespace Zwartpet\SwaggerMockerBundle\Tests\Service;
 
 use Symfony\Component\HttpFoundation\Request;
+use Zwartpet\SwaggerMockerBundle\Model\StubRequest;
 use Zwartpet\SwaggerMockerBundle\Model\StubResponse;
 
 class FactoryTest extends \PHPUnit_Framework_TestCase
@@ -28,27 +29,26 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function canCreateStubRequestFromFountationRequest()
+    public function canCreateStubRequestFromFoundationRequest()
     {
-        $foundation = new Request(
-            $query = [],
-            $request = [],
-            $attributes = [],
+        $foundation = Request::create(
+            $uri = 'http://foo.bar/blah?etc=x',
+            $method = 'POST',
+            $parameters = [],
             $cookies = [],
             $files = [],
             $server = [],
-            $content = null
+            $content = 'hello world'
         );
 
-        $body = 'foobar';
+        $stubRequest = StubRequest::fromHttpFoundation($foundation);
 
-        $response = (new StubResponse())
-            ->setBody($body)
-            ->setStatus(404);
+        $this->assertSame($stubRequest->getBody(), $foundation->getContent());
+        $this->assertSame($stubRequest->getMethod(), 'POST');
 
-        $foundation = $response->toHttpFoundation();
+        $urlDefinition = $stubRequest->getUrl()->toDefinition();
 
-        $this->assertSame($body, $foundation->getContent());
-        $this->assertSame(404, $foundation->getStatusCode());
+        $this->assertSame($urlDefinition->path, '/blah');
+        $this->assertSame($urlDefinition->query, 'etc=x');
     }
 }

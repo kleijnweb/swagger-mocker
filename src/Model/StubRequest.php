@@ -44,13 +44,24 @@ class StubRequest extends StubMessage
     }
 
     /**
-     * @param Request $httpFoundationRequest
+     * @param Request $foundationRequest
      * @return StubRequest
      */
-    public static function fromHttpFoundation(Request $httpFoundationRequest): StubRequest
+    public static function fromHttpFoundation(Request $foundationRequest): StubRequest
     {
         $self = new self();
-        $self->setMethod($httpFoundationRequest->getMethod());
+        $self->setMethod($foundationRequest->getMethod());
+
+        if ($foundationRequest->getMethod() !== 'GET') {
+            $self->setBody($foundationRequest->getContent());
+        }
+
+        $self->setUrl(
+            new Url(
+                $foundationRequest->getPathInfo()
+                . ($foundationRequest->getQueryString() ? "?{$foundationRequest->getQueryString()}" : "")
+            )
+        );
 
         return $self;
     }
