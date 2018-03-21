@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Zwartpet\SwaggerMockerBundle\Controller;
 
@@ -7,6 +7,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Zwartpet\SwaggerMockerBundle\Model\StubRequest;
+use Zwartpet\SwaggerMockerBundle\Model\StubResponse;
+use Zwartpet\SwaggerMockerBundle\Service\StubMatcher;
 
 class DefaultController extends Controller
 {
@@ -16,11 +19,21 @@ class DefaultController extends Controller
     private $examplesDir;
 
     /**
+     * @var StubMatcher
+     */
+    private $stubLoader;
+
+    /**
      * @param $rootDir
      */
     public function __construct($rootDir)
     {
         $this->examplesDir = $rootDir . '/../web/swagger/examples/';
+
+        $this->stubLoader = new StubMatcher(
+            new Filesystem(),
+            "$rootDir/web/swagger/stubs"
+        );
     }
 
     /**
@@ -30,6 +43,10 @@ class DefaultController extends Controller
      */
     public function getResponse(Request $request)
     {
+        if ($stubResponse = $this->stubLoader->getStubResponse(StubRequest::fromHttpFoundation($request))) {
+            return $stubResponse->toHttpFoundation();
+        }
+
         if ($fileExamples = $this->getExamplesFromFile($request)) {
             return $fileExamples;
         }
@@ -49,7 +66,7 @@ class DefaultController extends Controller
             return $definition->responses->{$statusCode}->{'examples'}->{'application/json'};
         }
 
-        throw new \Exception('No example found in default.yml to return');
+        throw new \Exception('No stub data source found');
     }
 
     /**
@@ -58,8 +75,8 @@ class DefaultController extends Controller
      */
     private function getExamplesFromFile(Request $request)
     {
-        $fs           = new Filesystem();
-        $attributes   = [];
+        $fs         = new Filesystem();
+        $attributes = [];
 
         if ($request->attributes->get('_route_params')) {
             foreach ($request->attributes->get('_route_params') as $key => $value) {
@@ -88,7 +105,7 @@ class DefaultController extends Controller
     {
         ksort($parameters);
         $requestParams = http_build_query($parameters);
-        
+
         return ($requestParams) ? "&$requestParams" : '';
     }
 
@@ -101,7 +118,7 @@ class DefaultController extends Controller
     {
         $codes = [200, 201, 202, 204];
         foreach ($codes as $code) {
-            if (property_exists($responses, $code)) {
+            if (property_exists($responses, (string)$code)) {
                 return $code;
             }
         }

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Schema",
+  "type": "object",
+  "required": [
+    "match",
+    "response"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "match": {
+      "$ref": "http://json-schema.org/draft-04/schema#"
+    },
+    "response": {
+      "$ref": "http-response.json"
+    }
+  }
+}

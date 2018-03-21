@@ -1,0 +1,6 @@
+- match:
+    type: object
+  response:
+    status: 999
+    body:
+      foo: bar
