@@ -4,14 +4,13 @@ namespace Zwartpet\SwaggerMockerBundle\Controller;
 
 use KleijnWeb\SwaggerBundle\Document\OperationObject;
 use Psr\Log\LoggerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Zwartpet\SwaggerMockerBundle\Model\StubRequest;
 use Zwartpet\SwaggerMockerBundle\Service\StubMatcher;
 
-class DefaultController extends Controller
+class DefaultController
 {
     /**
      * @var string|null
@@ -19,28 +18,26 @@ class DefaultController extends Controller
     private $examplesDir;
 
     /**
-     * @var StubMatcher
+     * @var null|StubMatcher
      */
     private $stubMatcher;
 
     /**
+     * @var null|LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @param string               $rootDir
      * @param LoggerInterface|null $logger
+     * @param StubMatcher|null     $stubMatcher
      */
-    public function __construct(string $rootDir, LoggerInterface $logger = null, StubMatcher $stubMatcher = null)
+    public function __construct(string $rootDir, LoggerInterface $logger, StubMatcher $stubMatcher = null)
     {
         $this->examplesDir = realpath($rootDir . '/../web/swagger/examples/') ?: null;
-
-        if (null === $logger) {
-            /** @var LoggerInterface $logger */
-            $logger = $this->get('logger');
-        }
-
-        if (null !== $stubMatcher) {
-            $this->stubMatcher = $stubMatcher;
-        } else {
-            $this->stubMatcher = new StubMatcher(new Filesystem(), "$rootDir/../web/swagger/stubs.yml", $logger);
-        }
+        $this->logger      = $logger;
+        $this->stubMatcher = $stubMatcher
+            ?: new StubMatcher(new Filesystem(), "$rootDir/../web/swagger/stubs.yml", $logger);
     }
 
     /**
@@ -51,6 +48,7 @@ class DefaultController extends Controller
     public function getResponse(Request $request)
     {
         if (null !== $stubResponse = $this->stubMatcher->getStubResponse(StubRequest::fromHttpFoundation($request))) {
+            $this->logger->info("Request matched from stub file");
             return $stubResponse->toHttpFoundation();
         }
 
@@ -78,6 +76,7 @@ class DefaultController extends Controller
 
     /**
      * @param Request $request
+     *
      * @return null|\stdClass
      */
     private function getExamplesFromFile(Request $request)
@@ -112,6 +111,7 @@ class DefaultController extends Controller
 
     /**
      * @param array $parameters
+     *
      * @return string
      */
     private function getQueryString($parameters)
@@ -124,6 +124,7 @@ class DefaultController extends Controller
 
     /**
      * @param $responses
+     *
      * @return mixed
      * @throws \Exception
      */

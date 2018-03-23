@@ -7,6 +7,6 @@ swagger-json:
     resource: "default.json"
     type: swagger-mock
 
-swagger-yaml:
-    resource: "api.yml"
+swagger-definitions:
+    resource: "definitions/service/api.yml"
     type: swagger-mock

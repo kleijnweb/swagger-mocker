@@ -66,7 +66,17 @@ class Url
      */
     public static function fromDefinition(\stdClass $definition): Url
     {
+        $self = new static();
 
+        foreach ($definition as $propertyName => $value) {
+            if ($value !== null) {
+                $self->$propertyName = $value;
+            }
+        }
+
+        var_dump($self);
+
+        return $self;
     }
 
     /**

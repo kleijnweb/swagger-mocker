@@ -36,10 +36,17 @@ class StubMatcher
     {
         $this->fileSystem      = $fileSystem;
         $this->stubDirectory   = $stubFilePath;
-        $this->stubDefinitions = $this->loadDefinition($stubFilePath);
         $this->logger          = $logger;
+        $this->stubDefinitions = $this->loadDefinition($stubFilePath);
 
-        $validator = new Validator($this->stubDefinitions, $this->loadDefinition('app/config/schema/stubs.json'));
+        $this->logger->info(sprintf("Loaded %d stubs", count($this->stubDefinitions)));
+
+        $validator = new Validator(
+            $this->stubDefinitions,
+            $this->loadDefinition(
+                __DIR__ . '/../../app/config/schema/stubs.json'
+            )
+        );
 
         if ($validator->fails()) {
             $this->logger->critical("Stub file is invalid.");
@@ -52,11 +59,14 @@ class StubMatcher
 
     /**
      * @param StubRequest $request
+     *
      * @return StubResponse|null
      */
     public function getStubResponse(StubRequest $request)
     {
         $requestDefinition = $request->toDefinition();
+
+        var_dump($requestDefinition);
 
         foreach ($this->stubDefinitions as $stubDefinition) {
 
@@ -72,15 +82,18 @@ class StubMatcher
 
     /**
      * @param string $filePath
+     *
      * @return \stdClass|array
      */
     public function loadDefinition(string $filePath)
     {
+        $this->logger->info("Loading definition in file '$filePath'");
         return (Dereferencer::draft4())->dereference($this->parseDefinition($filePath), "file://$filePath");
     }
 
     /**
      * @param string $filePath
+     *
      * @return \stdClass|array
      */
     public function parseDefinition(string $filePath)

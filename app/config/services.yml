@@ -1,4 +1,8 @@
 services:
+    swagger.controller.default:
+        class: Zwartpet\SwaggerMockerBundle\Controller\DefaultController
+        arguments: ['%kernel.root_dir%', '@logger' ]
+
     api.document_controller:
         class: Zwartpet\SwaggerMockerBundle\Controller\OpenApiDocumentController
         arguments: ['@swagger.document.repository']
@@ -13,10 +17,6 @@ services:
         arguments: ['@swagger.document.repository']
         tags:
            - { name: routing.loader }
-
-    swagger.controller.default:
-        class: Zwartpet\SwaggerMockerBundle\Controller\DefaultController
-        arguments: ['%kernel.root_dir%']
 
     swagger.stub_loader:
         class: Zwartpet\SwaggerMockerBundle\Services\StubLoader
