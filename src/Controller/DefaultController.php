@@ -37,7 +37,7 @@ class DefaultController
         $this->examplesDir = realpath($rootDir . '/../web/swagger/examples/') ?: null;
         $this->logger      = $logger;
         $this->stubMatcher = $stubMatcher
-            ?: new StubMatcher(new Filesystem(), "$rootDir/../web/swagger/stubs.yml", $logger);
+            ?: new StubMatcher(new Filesystem(), "$rootDir/../web/swagger/stubs", $logger);
     }
 
     /**

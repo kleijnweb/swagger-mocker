@@ -28,32 +28,43 @@ class StubMatcher
     private $logger;
 
     /**
+     * @var array
+     */
+    private $stubDefinitions = [];
+
+    /**
      * @param Filesystem      $fileSystem
-     * @param string          $stubFilePath
+     * @param string          $stubDirectory
      * @param LoggerInterface $logger
      */
-    public function __construct(Filesystem $fileSystem, string $stubFilePath, LoggerInterface $logger)
+    public function __construct(Filesystem $fileSystem, string $stubDirectory, LoggerInterface $logger)
     {
-        $this->fileSystem      = $fileSystem;
-        $this->stubDirectory   = $stubFilePath;
-        $this->logger          = $logger;
-        $this->stubDefinitions = $this->loadDefinition($stubFilePath);
+        $this->fileSystem    = $fileSystem;
+        $this->stubDirectory = $stubDirectory;
+        $this->logger        = $logger;
 
-        $this->logger->info(sprintf("Loaded %d stubs", count($this->stubDefinitions)));
+        $stubSchema = $this->loadDefinition(__DIR__ . '/../../app/config/schema/stubs.json');
 
-        $validator = new Validator(
-            $this->stubDefinitions,
-            $this->loadDefinition(
-                __DIR__ . '/../../app/config/schema/stubs.json'
-            )
-        );
+        foreach (new \DirectoryIterator($stubDirectory) as $stubFile) {
 
-        if ($validator->fails()) {
-            $this->logger->critical("Stub file is invalid.");
-            foreach ($validator->errors() as $error) {
-                $this->logger->warning("{$error->getDataPath()}: {$error->getMessage()}");
+            if ($stubFile->isDot() || $stubFile->isDir()) {
+                continue;
             }
-            throw new \UnexpectedValueException("Stub file is invalid");
+
+            $stubDefinitions = $this->loadDefinition($stubFile->getPathname());
+
+            $this->logger->info(sprintf("Loaded %d stubs", count($this->stubDefinitions)));
+
+            $validator = new Validator($stubDefinitions, $stubSchema);
+
+            if ($validator->fails()) {
+                foreach ($validator->errors() as $error) {
+                    $this->logger->warning("{$error->getDataPath()}: {$error->getMessage()}");
+                }
+                throw new \UnexpectedValueException("Stub file '{$stubFile->getPathname()}' is invalid");
+            }
+
+            $this->stubDefinitions = array_merge($this->stubDefinitions, $stubDefinitions);
         }
     }
 
@@ -65,8 +76,6 @@ class StubMatcher
     public function getStubResponse(StubRequest $request)
     {
         $requestDefinition = $request->toDefinition();
-
-        var_dump($requestDefinition);
 
         foreach ($this->stubDefinitions as $stubDefinition) {
 

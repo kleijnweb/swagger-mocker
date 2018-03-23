@@ -25,11 +25,7 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
     {
         /** @var LoggerInterface $logger */
         $this->loggerMock = $logger = $this->getMockBuilder(LoggerInterface::class)->getMock();
-        $this->matcher    = new StubMatcher(
-            new Filesystem(),
-            __DIR__ . '/_assets/stubs.yml',
-            $logger
-        );
+        $this->matcher    = new StubMatcher(new Filesystem(), __DIR__ . '/_assets/stubs', $logger);
 
     }
 
@@ -46,11 +42,7 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
         /** @var LoggerInterface $logger */
         $logger = $this->loggerMock;
 
-        $this->matcher = new StubMatcher(
-            new Filesystem(),
-            __DIR__ . '/_assets/invalid_stubs.yml',
-            $logger
-        );
+        $this->matcher = new StubMatcher(new Filesystem(), __DIR__ . '/_assets/invalid_stubs', $logger);
     }
 
     /**
@@ -108,7 +100,7 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
         $request = (new StubRequest())
             ->setMethod('PUT')
             ->setBody((object)[
-                'foo' => 'bar'
+                'foo' => 'bar',
             ])
             ->setUrl(new Url('/foo'));
 
@@ -129,8 +121,8 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
         $request = (new StubRequest())
             ->setMethod('PUT')
             ->setBody((object)[
-                'foo' => 'bar',
-                'nope' => true
+                'foo'  => 'bar',
+                'nope' => true,
             ])
             ->setUrl(new Url('/foo'));
 
@@ -146,10 +138,10 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
         $request = (new StubRequest())
             ->setMethod('PUT')
             ->setBody((object)[
-                'foo' => 'bar'
+                'foo' => 'bar',
             ])
             ->setHeaders((object)[
-                'Authorization' => 'something'
+                'Authorization' => 'something',
             ])
             ->setUrl(new Url('/foo'));
 
@@ -170,10 +162,10 @@ class StubMatcherTest extends \PHPUnit_Framework_TestCase
         $request = (new StubRequest())
             ->setMethod('PUT')
             ->setBody((object)[
-                'foo' => 'bar'
+                'foo' => 'bar',
             ])
             ->setHeaders((object)[
-                'Fooo' => 'bar'
+                'Fooo' => 'bar',
             ])
             ->setUrl(new Url('/foo'));
 
