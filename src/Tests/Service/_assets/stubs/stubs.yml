@@ -1,0 +1,63 @@
+- match:
+    type: object
+    properties:
+      method:
+        type: string
+        enum: [ GET ]
+  response:
+    status: 204
+- match:
+    type: object
+    properties:
+      method:
+        type: string
+        enum: [ POST ]
+      body:
+        type: object
+  response:
+    status: 200
+    body:
+      id: 1
+      foo: bar
+- match:
+    type: object
+    properties:
+      method:
+        type: string
+        enum: [ POST ]
+      body:
+        type: object
+        properties:
+          foo:
+            type: string
+            enum: [ bar ]
+  response:
+    status: 200
+    body:
+      id: 2
+      foo: bar
+- match:
+    type: object
+    required: [ method, body ]
+    properties:
+      headers:
+        type: object
+        required: [ Authorization ]
+        properties:
+          'Authorization':
+            type: string
+      method:
+        type: string
+        enum: [ PUT ]
+      body:
+        type: object
+        additionalProperties: false
+        properties:
+          foo:
+            type: string
+            enum: [ bar ]
+  response:
+    status: 200
+    body:
+      id: 3
+      foo: bar

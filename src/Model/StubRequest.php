@@ -35,6 +35,7 @@ class StubRequest extends StubMessage
 
     /**
      * @param Url $url
+     *
      * @return StubRequest
      */
     public function setUrl(Url $url): StubRequest
@@ -45,6 +46,7 @@ class StubRequest extends StubMessage
 
     /**
      * @param Request $foundationRequest
+     *
      * @return StubRequest
      */
     public static function fromHttpFoundation(Request $foundationRequest): StubRequest
@@ -63,11 +65,18 @@ class StubRequest extends StubMessage
             )
         );
 
-        return $self;
+        $headers = (object)[];
+
+        foreach ($foundationRequest->headers->all() as $headerName => $value) {
+            $headers->$headerName = $value;
+        }
+
+        return $self->setHeaders($headers);
     }
 
     /**
      * @param \stdClass $definition
+     *
      * @return StubRequest
      */
     public static function fromDefinition(\stdClass $definition): StubRequest
@@ -88,6 +97,7 @@ class StubRequest extends StubMessage
 
     /**
      * @param string $method
+     *
      * @return StubRequest
      */
     public function setMethod(string $method): StubRequest

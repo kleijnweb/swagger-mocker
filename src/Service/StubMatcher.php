@@ -66,8 +66,6 @@ class StubMatcher
     {
         $requestDefinition = $request->toDefinition();
 
-        var_dump($requestDefinition);
-
         foreach ($this->stubDefinitions as $stubDefinition) {
 
             $validator = new Validator($requestDefinition, $stubDefinition->match);
